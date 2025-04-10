@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Chess } from 'chess.js';
 import { Chessboard } from 'react-native-chessboard';
 import { puzzles } from '../puzzles';
@@ -117,43 +118,45 @@ const PuzzleScreen = ({ route, navigation }) => {
 
   if (!puzzle) {
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
         <Text>Puzzle not found</Text>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.puzzleTitle}>{puzzle.name}</Text>
-        <Text style={styles.puzzleInstructions}>Find the checkmate in one move</Text>
-      </View>
-      
-      <View style={styles.boardContainer}>
-        {game && fen && (
-          <Chessboard
-            key={`board-${puzzleId}-${Platform.OS}`}
-            fen={fen}
-            onMove={handleMove}
-            boardSize={350}
-            enableUserMoves={true}
-          />
-        )}
-      </View>
-      
-      <View style={styles.controlsContainer}>
-        <TouchableOpacity style={styles.button} onPress={handleReset}>
-          <Text style={styles.buttonText}>Reset</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={handleUndo}>
-          <Text style={styles.buttonText}>Undo</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={handleHint}>
-          <Text style={styles.buttonText}>Hint</Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+    <GestureHandlerRootView style={styles.container}>
+      <SafeAreaView style={styles.safeContainer}>
+        <View style={styles.header}>
+          <Text style={styles.puzzleTitle}>{puzzle.name}</Text>
+          <Text style={styles.puzzleInstructions}>Find the checkmate in one move</Text>
+        </View>
+        
+        <View style={styles.boardContainer}>
+          {game && fen && (
+            <Chessboard
+              key={`board-${puzzleId}-${Platform.OS}`}
+              fen={fen}
+              onMove={handleMove}
+              boardSize={350}
+              enableUserMoves={true}
+            />
+          )}
+        </View>
+        
+        <View style={styles.controlsContainer}>
+          <TouchableOpacity style={styles.button} onPress={handleReset}>
+            <Text style={styles.buttonText}>Reset</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.button} onPress={handleUndo}>
+            <Text style={styles.buttonText}>Undo</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.button} onPress={handleHint}>
+            <Text style={styles.buttonText}>Hint</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    </GestureHandlerRootView>
   );
 };
 
@@ -161,6 +164,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+  },
+  safeContainer: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: 20,

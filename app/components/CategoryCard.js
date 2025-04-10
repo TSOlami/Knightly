@@ -1,8 +1,21 @@
 import React from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Dimensions } from 'react-native';
-import { LinearGradient } from 'react-native-linear-gradient';
+import { StyleSheet, View, Text, Dimensions } from 'react-native';
+import { TouchableOpacity } from 'react-native-gesture-handler';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import { COLORS, SHADOWS, SIZES } from '../theme';
+
+// Import LinearGradient with a fallback mechanism
+let LinearGradient;
+try {
+  LinearGradient = require('react-native-linear-gradient').LinearGradient;
+} catch (e) {
+  // If LinearGradient fails to load, create a fallback component
+  LinearGradient = ({ colors, style, children, ...props }) => (
+    <View style={[style, { backgroundColor: colors[0] }]} {...props}>
+      {children}
+    </View>
+  );
+}
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.43;
