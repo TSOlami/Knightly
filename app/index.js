@@ -1,18 +1,5 @@
-import 'react-native-gesture-handler';
-import 'react-native-reanimated';
-import { registerRootComponent } from 'expo';
-import { ExpoRoot } from 'expo-router';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import React from 'react';
+import { Redirect } from 'expo-router';
 
-// Register the expo-router as the main component
-export default function App() {
-  const ctx = require.context('./app');
-  return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <ExpoRoot context={ctx} />
-    </GestureHandlerRootView>
-  );
-}
-
-registerRootComponent(App);
+export default function Index() {
+  return <Redirect href="/(tabs)" />;
+} 

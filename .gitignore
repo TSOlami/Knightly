@@ -34,6 +34,3 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
-
-# Instructions
-PRD.md
