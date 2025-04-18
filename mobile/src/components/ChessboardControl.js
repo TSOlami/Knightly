@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet, Text } from 'react-native';
-import { ChessboardContainer } from 'react-native-chessboard';
+import Chessboard from 'react-native-chessboard';
 import { Chess } from 'chess.js';
 import Button from './Button';
 import theme from '../theme';
@@ -21,6 +21,7 @@ const ChessboardControl = ({
   const [highlightedSquares, setHighlightedSquares] = useState({});
   const initialFen = useRef(fen);
   const initialChess = useRef(new Chess(fen));
+  const chessboardRef = useRef(null);
   
   // When FEN changes (e.g., new puzzle), reset the board
   useEffect(() => {
@@ -36,6 +37,10 @@ const ChessboardControl = ({
     setPlayerMoves([]);
     setHintSquares({ from: null, to: null });
     setHighlightedSquares({});
+    
+    if (chessboardRef.current) {
+      chessboardRef.current.resetBoard(initialFen.current);
+    }
   };
 
   // Undo the last move
@@ -53,6 +58,10 @@ const ChessboardControl = ({
     // Clear hints and highlights
     setHintSquares({ from: null, to: null });
     setHighlightedSquares({});
+    
+    if (chessboardRef.current) {
+      chessboardRef.current.undo();
+    }
   };
 
   // Get a hint for the current position
@@ -77,6 +86,13 @@ const ChessboardControl = ({
       if (hint.from) newHighlights[hint.from] = { backgroundColor: theme.COLORS.board.highlight };
       if (hint.to) newHighlights[hint.to] = { backgroundColor: theme.COLORS.board.highlight };
       setHighlightedSquares(newHighlights);
+      
+      if (chessboardRef.current && hint.from) {
+        chessboardRef.current.highlight({ square: hint.from, color: theme.COLORS.board.highlight });
+      }
+      if (chessboardRef.current && hint.to) {
+        chessboardRef.current.highlight({ square: hint.to, color: theme.COLORS.board.highlight });
+      }
     }
   };
 
@@ -205,18 +221,18 @@ const ChessboardControl = ({
   return (
     <View style={styles.container}>
       <View style={styles.boardContainer}>
-        <ChessboardContainer
+        <Chessboard
+          ref={chessboardRef}
           fen={chess.fen()}
           boardSize={boardSize}
-          customDarkSquareStyle={{
-            backgroundColor: theme.COLORS.board.dark,
+          colors={{
+            black: theme.COLORS.board.dark,
+            white: theme.COLORS.board.light,
           }}
-          customLightSquareStyle={{
-            backgroundColor: theme.COLORS.board.light,
+          onMove={({ state }) => {
+            // This is called when a move is made on the board
+            console.log('Move made', state);
           }}
-          customSquareStyles={getSquareStyles()}
-          onSquareClick={onSquareClick}
-          boardOrientation={chess.turn() === 'w' ? 'white' : 'black'}
         />
       </View>
       
@@ -250,7 +266,7 @@ const ChessboardControl = ({
 
         <View style={styles.iconButton}>
           <Button 
-            onPress={getHint}
+            onPress={getHint} 
             variant="icon"
             size="medium"
           >
@@ -281,28 +297,25 @@ const ChessboardControl = ({
 const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
+    justifyContent: 'center',
   },
   boardContainer: {
-    ...theme.SHADOWS.medium,
-    borderRadius: theme.BORDER_RADIUS.sm,
-    overflow: 'hidden',
+    marginVertical: 10,
   },
   controlsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    marginTop: 20,
+    justifyContent: 'space-around',
     width: '100%',
-    paddingHorizontal: theme.SPACING.md,
-    marginTop: theme.SPACING.md,
-    maxWidth: 350,
   },
   iconButton: {
     alignItems: 'center',
-    flex: 1,
+    marginHorizontal: 10,
   },
   iconLabel: {
-    fontSize: theme.TYPOGRAPHY.fontSize.xs,
+    marginTop: 4,
+    fontSize: 12,
     color: theme.COLORS.text.secondary,
-    marginTop: theme.SPACING.xs,
   },
   statusContainer: {
     flexDirection: 'row',

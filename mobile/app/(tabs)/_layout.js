@@ -1,8 +1,11 @@
 import { Tabs } from 'expo-router';
-import { Platform, StyleSheet } from 'react-native';
+import { Platform, StyleSheet, Dimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import TabBarIcon from '../../src/components/TabBarIcon';
 import theme from '../../src/theme';
+
+const { width } = Dimensions.get('window');
+const isSmallDevice = width < 375; // Common breakpoint for small devices
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
@@ -13,16 +16,13 @@ export default function TabLayout() {
         tabBarActiveTintColor: theme.COLORS.primary,
         tabBarInactiveTintColor: theme.COLORS.text.secondary,
         tabBarStyle: {
-          backgroundColor: theme.COLORS.white,
-          borderTopColor: 'rgba(0, 0, 0, 0.1)',
-          paddingBottom: Platform.OS === 'ios' ? Math.max(insets.bottom, 10) : 8,
-          paddingTop: 8,
-          height: Platform.OS === 'ios' ? 60 + Math.max(insets.bottom, 10) : 60,
-          elevation: 8,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: -3 },
-          shadowOpacity: 0.1,
-          shadowRadius: 3,
+          backgroundColor: theme.COLORS.background,
+          borderTopColor: 'transparent',
+          elevation: 0,
+          shadowOpacity: 0,
+        },
+        tabBarLabelStyle: {
+          display: isSmallDevice ? 'none' : 'flex',
         },
         headerStyle: {
           backgroundColor: theme.COLORS.primary,

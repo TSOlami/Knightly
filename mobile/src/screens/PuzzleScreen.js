@@ -152,23 +152,32 @@ const PuzzleScreen = ({ puzzleName: propPuzzleName, puzzleId: propPuzzleId }) =>
           title="Next Puzzle"
           variant="primary"
           size="medium"
-          onPress={() => {
-            // Get a random puzzle from the same category
-            const nextPuzzleId = 'cm1-003'; // Placeholder - would normally get next puzzle
-            const nextPuzzle = puzzleService.getPuzzleById(nextPuzzleId);
-            
-            if (nextPuzzle) {
+          onPress={async () => {
+            try {
+              // Get a random puzzle from the same category
+              const nextPuzzleId = 'cm1-003'; // Would normally get next puzzle from API or store
+              setLoading(true);
+              
+              // Fetch the next puzzle data asynchronously
+              const nextPuzzleData = await puzzleService.getPuzzleById(nextPuzzleId);
+              const formattedPuzzle = puzzleService.formatPuzzle(nextPuzzleData);
+              
               // Reset state and load next puzzle
               setIsSolved(false);
               setShowSolution(false);
               setMoveHistory([]);
-              setPuzzle(nextPuzzle);
+              setPuzzle(formattedPuzzle);
               
               // Update the URL params
               router.setParams({
-                puzzleId: nextPuzzle.id,
-                puzzleName: nextPuzzle.name
+                puzzleId: formattedPuzzle.id,
+                puzzleName: formattedPuzzle.name
               });
+            } catch (error) {
+              console.error('Failed to load next puzzle:', error);
+              Alert.alert('Error', 'Failed to load next puzzle. Please try again.');
+            } finally {
+              setLoading(false);
             }
           }}
           style={styles.actionButton}
