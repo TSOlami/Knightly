@@ -5,7 +5,8 @@ import {
   getThemes, 
   getOpenings, 
   getPuzzleStats, 
-  getPuzzleById 
+  getPuzzleById,
+  getNextPuzzle
 } from '../controllers/puzzleController.js';
 
 const router = express.Router();
@@ -21,6 +22,9 @@ router.get('/categories/openings', getOpenings);
 
 // Get puzzle statistics
 router.get('/stats/overview', getPuzzleStats);
+
+// Get next puzzle - MUST come before the /:puzzleId route
+router.get('/next/:puzzleId', optionalAuth, getNextPuzzle);
 
 // Get a specific puzzle by ID - MUST come after all other specific routes
 router.get('/:puzzleId', optionalAuth, getPuzzleById);

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import PuzzleCard from '../components/PuzzleCard';
 import Button from '../components/Button';
 import theme from '../theme';
 import TabBarIcon from '../components/TabBarIcon';
 import puzzleService from '../services/puzzleService';
+import { PuzzleCardSkeleton } from '../components/Skeleton';
 
 const PuzzleListScreen = ({ categoryName: propCategoryName, categoryId: propCategoryId }) => {
   const router = useRouter();
@@ -22,6 +23,7 @@ const PuzzleListScreen = ({ categoryName: propCategoryName, categoryId: propCate
   const [sortIndex, setSortIndex] = useState(0);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   
   // Filter options
   const filterOptions = [
@@ -80,10 +82,10 @@ const PuzzleListScreen = ({ categoryName: propCategoryName, categoryId: propCate
   
   // Load more puzzles when scrolling
   const loadMorePuzzles = async () => {
-    if (!hasMore || loading) return;
+    if (!hasMore || loading || loadingMore) return;
     
     try {
-      setLoading(true);
+      setLoadingMore(true);
       
       const nextPage = page + 1;
       const ordering = sortOptions[sortIndex].value;
@@ -105,7 +107,7 @@ const PuzzleListScreen = ({ categoryName: propCategoryName, categoryId: propCate
     } catch (err) {
       console.error('Failed to load more puzzles:', err);
     } finally {
-      setLoading(false);
+      setLoadingMore(false);
     }
   };
   
@@ -114,14 +116,14 @@ const PuzzleListScreen = ({ categoryName: propCategoryName, categoryId: propCate
     let filtered = [...puzzles];
     
     // Apply filter
-    // Note: In a real app, you would get the solved status from user data in the API
-    // This is a mock implementation just for the UI
+    // In a real app, we should be checking the user's solved puzzles from AuthContext
+    // This needs to be implemented by checking against the user's solvedPuzzles array
     if (filterIndex === 1) {
-      // Unsolved only - for this mock, assume odd-indexed puzzles are unsolved
-      filtered = filtered.filter((_, index) => index % 2 === 1);
+      // Unsolved puzzles - to be implemented with real user data
+      filtered = filtered;
     } else if (filterIndex === 2) {
-      // Solved only - for this mock, assume even-indexed puzzles are solved
-      filtered = filtered.filter((_, index) => index % 2 === 0);
+      // Solved puzzles - to be implemented with real user data
+      filtered = filtered;
     }
     
     return filtered;
@@ -139,9 +141,10 @@ const PuzzleListScreen = ({ categoryName: propCategoryName, categoryId: propCate
   };
   
   // Render an item in the list
-  const renderPuzzleItem = ({ item, index }) => {
-    // Mock completed status
-    const completed = index % 2 === 0;
+  const renderPuzzleItem = ({ item }) => {
+    // This should check if the puzzle is in the user's solvedPuzzles array
+    // For now, we'll set all puzzles as not completed until we implement the real check
+    const completed = false;
     
     return (
       <PuzzleCard
@@ -152,19 +155,23 @@ const PuzzleListScreen = ({ categoryName: propCategoryName, categoryId: propCate
     );
   };
   
-  // Calculate completion rate - mock data
-  const completionRate = puzzles.length > 0
-    ? Math.round((puzzles.length / 2) / puzzles.length * 100)  // Mock: half of puzzles are completed
-    : 0;
+  // Calculate completion rate - this should be based on real data
+  const completionRate = 0; // Will be updated when we implement the real check
   
-  // Render footer for the list (loading indicator)
+  // Render a list of skeleton loading items
+  const renderSkeletonLoading = () => {
+    return Array(8).fill(0).map((_, index) => (
+      <PuzzleCardSkeleton key={`skeleton-${index}`} />
+    ));
+  };
+
+  // Render the footer for load more
   const renderFooter = () => {
-    if (!loading) return null;
+    if (!loadingMore) return null;
     
     return (
       <View style={styles.listFooter}>
-        <ActivityIndicator size="small" color={theme.COLORS.primary} />
-        <Text style={styles.loadingMoreText}>Loading more puzzles...</Text>
+        <PuzzleCardSkeleton />
       </View>
     );
   };
@@ -248,23 +255,29 @@ const PuzzleListScreen = ({ categoryName: propCategoryName, categoryId: propCate
         </View>
       ) : (
         <FlatList
-          data={getFilteredPuzzles()}
+          data={loading ? [] : getFilteredPuzzles()}
           renderItem={renderPuzzleItem}
           keyExtractor={item => item.id}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
-          ListFooterComponent={renderFooter}
+          ListFooterComponent={loadingMore ? renderFooter : null}
           onEndReached={loadMorePuzzles}
           onEndReachedThreshold={0.5}
           initialNumToRender={10}
+          ListEmptyComponent={loading ? (
+            <View style={styles.skeletonContainer}>
+              {renderSkeletonLoading()}
+            </View>
+          ) : null}
         />
       )}
       
-      {/* Loading indicator */}
-      {loading && puzzles.length === 0 && (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.COLORS.primary} />
-          <Text style={styles.loadingText}>Loading puzzles...</Text>
+      {/* Loading skeleton state */}
+      {loading && (
+        <View style={styles.skeletonOverlay}>
+          <View style={styles.skeletonContainer}>
+            {renderSkeletonLoading()}
+          </View>
         </View>
       )}
     </View>
@@ -377,31 +390,8 @@ const styles = StyleSheet.create({
     color: theme.COLORS.text.secondary,
     textAlign: 'center',
   },
-  loadingContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
-  },
-  loadingText: {
-    marginTop: theme.SPACING.md,
-    fontSize: theme.TYPOGRAPHY.fontSize.md,
-    color: theme.COLORS.text.secondary,
-  },
   listFooter: {
     paddingVertical: theme.SPACING.md,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingMoreText: {
-    marginLeft: theme.SPACING.sm,
-    fontSize: theme.TYPOGRAPHY.fontSize.sm,
-    color: theme.COLORS.text.secondary,
   },
   errorContainer: {
     flex: 1,
@@ -414,6 +404,18 @@ const styles = StyleSheet.create({
     color: theme.COLORS.error,
     textAlign: 'center',
   },
+  skeletonContainer: {
+    padding: theme.SPACING.md,
+  },
+  skeletonOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: theme.COLORS.background,
+    paddingTop: 200, // Start below the header, filters, etc.
+  }
 });
 
 export default PuzzleListScreen; 

@@ -1,54 +1,62 @@
 import 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
-import { LogBox, StyleSheet } from 'react-native';
-import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ExpoRoot } from 'expo-router';
 import { AuthProvider } from './src/context/AuthContext';
-import { ThemeProvider } from 'react-native-elements';
+import { ThemeProvider } from './src/context/ThemeContext';
+import { SoundProvider } from './src/context/SoundContext';
+import * as Notifications from 'expo-notifications';
+import { useRef, useEffect } from 'react';
+import { router } from 'expo-router';
 
-// Fix for touch responsiveness issues
-LogBox.ignoreLogs([
-  'Require cycle:',
-  'ViewPropTypes will be removed from React Native',
-  '[Layout children]',
-  'No route named "(modals)" exists',
-  'useAuth must be used within an AuthProvider', // Temporarily ignore this while we fix it
-]);
-
-// Toggle dev menu using 'm' key in terminal to fix touch responsiveness
-console.log('To fix touch responsiveness issues, you may need to toggle the dev menu by pressing "m" in the terminal');
+// Set up notification handler
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 
 export default function App() {
-  // Toggle dev menu to fix touch issues - this is a known workaround
+  const notificationListener = useRef();
+  const responseListener = useRef();
+
   useEffect(() => {
-    const toggleDevMenu = async () => {
-      try {
-        if (__DEV__) {
-          console.log('Tip: If touch is not responsive, press m in the terminal to toggle dev menu');
-        }
-      } catch (e) {
-        console.warn('Error:', e);
+    // Set up notification listeners
+    notificationListener.current = Notifications.addNotificationReceivedListener(
+      notification => {
+        console.log('Notification received:', notification);
       }
+    );
+
+    responseListener.current = Notifications.addNotificationResponseReceivedListener(
+      response => {
+        console.log('Notification response received:', response);
+        const screen = response.notification.request.content.data?.screen;
+        if (screen) {
+          router.push(screen);
+        }
+      }
+    );
+
+    // Clean up listeners on unmount
+    return () => {
+      Notifications.removeNotificationSubscription(notificationListener.current);
+      Notifications.removeNotificationSubscription(responseListener.current);
     };
-    
-    toggleDevMenu();
   }, []);
 
-  // Setup expo router
-  const ctx = require.context('./app');
   return (
-    <AuthProvider>
-      <SafeAreaProvider style={styles.container}>
-        <StatusBar style="auto" />
-        <ExpoRoot context={ctx} />
-      </SafeAreaProvider>
-    </AuthProvider>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <ThemeProvider>
+          <SoundProvider>
+            <StatusBar style="auto" />
+            <ExpoRoot context={require.context('./app', true)} />
+          </SoundProvider>
+        </ThemeProvider>
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});

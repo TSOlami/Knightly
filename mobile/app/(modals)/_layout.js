@@ -1,5 +1,6 @@
 import { Stack, useLocalSearchParams } from 'expo-router';
 import theme from '../../src/theme';
+import { SoundProvider } from '../../src/context/SoundContext';
 
 // Helper function to set screen options based on route
 const getScreenOptions = (route) => {
@@ -22,18 +23,20 @@ const getScreenOptions = (route) => {
 
 export default function ModalLayout() {
   return (
-    <Stack
-      screenOptions={({ route }) => ({
-        headerStyle: {
-          backgroundColor: theme.COLORS.primary,
-        },
-        headerTintColor: theme.COLORS.white,
-        headerTitleStyle: {
-          fontWeight: 'bold',
-        },
-        presentation: 'modal',
-        ...getScreenOptions(route),
-      })}
-    />
+    <SoundProvider>
+      <Stack
+        screenOptions={({ route }) => ({
+          headerStyle: {
+            backgroundColor: theme.COLORS.primary,
+          },
+          headerTintColor: theme.COLORS.white,
+          headerTitleStyle: {
+            fontWeight: 'bold',
+          },
+          presentation: 'modal',
+          ...getScreenOptions(route),
+        })}
+      />
+    </SoundProvider>
   );
 } 

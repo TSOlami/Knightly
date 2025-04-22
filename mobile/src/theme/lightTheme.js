@@ -3,21 +3,22 @@ const COLORS = {
   secondary: '#A23B72',       // Vibrant Purple
   tertiary: '#F18F01',        // Vibrant Orange
   background: '#F5F7FA',      // Light Gray
-  darkBackground: '#2D2D34',  // Dark Gray
-  white: '#FFFFFF',
-  black: '#000000',
-  success: '#4CAF50',
-  error: '#F44336',
-  card: '#FFFFFF',            // Card background
-  border: '#DEDEDE',          // Border color
-  skeleton: '#E1E9EE',        // Skeleton loading color
-  skeletonHighlight: '#F2F8FC', // Skeleton loading highlight
+  card: '#FFFFFF',
   text: {
     primary: '#2D2D34',
     secondary: '#6B7280',
     light: '#FFFFFF',
     disabled: '#CCCCCC',
   },
+  success: '#4CAF50',
+  error: '#F44336',
+  warning: '#FF9800',
+  info: '#2196F3',
+  greyLight: '#EEEEEE',
+  greyDark: '#666666',
+  skeleton: '#E1E9EE',        // Skeleton loading base color
+  skeletonHighlight: '#F2F8FC', // Skeleton loading highlight color
+  border: '#DEDEDE',
   pieces: {
     white: '#F8F8F8',
     black: '#383838',

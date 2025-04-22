@@ -68,7 +68,7 @@ const puzzleService = {
       return response.data;
     } catch (error) {
       console.error('Error fetching puzzle:', error);
-      throw error.response?.data?.message || 'Failed to fetch puzzle';
+      throw error;
     }
   },
   
@@ -163,6 +163,16 @@ const puzzleService = {
       return response.puzzles.map(puzzleService.formatPuzzle);
     } catch (error) {
       console.error(`Error fetching puzzles for theme ${theme}:`, error);
+      throw error;
+    }
+  },
+
+  getNextPuzzle: async (currentPuzzleId) => {
+    try {
+      const response = await api.get(`/puzzles/next/${currentPuzzleId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching next puzzle:', error);
       throw error;
     }
   },

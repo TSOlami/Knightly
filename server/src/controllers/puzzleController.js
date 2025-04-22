@@ -206,4 +206,57 @@ export const getPuzzleById = async (req, res) => {
     console.error('Error fetching puzzle:', error);
     res.status(500).json({ message: error.message });
   }
+};
+
+// Get next puzzle
+export const getNextPuzzle = async (req, res) => {
+  try {
+    const { puzzleId } = req.params;
+    const user = req.user; // From optional auth middleware
+    
+    // Get current puzzle to get its rating
+    const currentPuzzle = await Puzzle.findOne({ puzzleId });
+    if (!currentPuzzle) {
+      return res.status(404).json({ message: 'Current puzzle not found' });
+    }
+    
+    // Build query for next puzzle
+    const query = {
+      puzzleId: { $ne: puzzleId },
+      rating: {
+        $gte: currentPuzzle.rating - 200,
+        $lte: currentPuzzle.rating + 200
+      }
+    };
+
+    // If user is logged in, exclude puzzles they've already solved
+    if (user && user.solvedPuzzles && user.solvedPuzzles.length > 0) {
+      query.puzzleId.$nin = user.solvedPuzzles.map(p => p.puzzleId);
+    }
+    
+    // Get count of available puzzles
+    const count = await Puzzle.countDocuments(query);
+    
+    if (count === 0) {
+      // If no puzzles in the rating range, expand the range
+      delete query.rating;
+      const totalCount = await Puzzle.countDocuments(query);
+      if (totalCount === 0) {
+        return res.status(404).json({ message: 'No more puzzles available' });
+      }
+    }
+    
+    // Get a random puzzle from the available ones
+    const random = Math.floor(Math.random() * (count || 1));
+    const nextPuzzle = await Puzzle.findOne(query).skip(random);
+    
+    if (!nextPuzzle) {
+      return res.status(404).json({ message: 'No more puzzles available' });
+    }
+    
+    res.json(nextPuzzle);
+  } catch (error) {
+    console.error('Error fetching next puzzle:', error);
+    res.status(500).json({ message: error.message });
+  }
 }; 

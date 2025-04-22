@@ -7,7 +7,7 @@ import theme from '../theme';
 import puzzleService from '../services/puzzleService';
 
 const HomeScreen = () => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [featuredPuzzles, setFeaturedPuzzles] = useState([]);
   const [puzzleStats, setPuzzleStats] = useState({});
@@ -33,15 +33,6 @@ const HomeScreen = () => {
     
     fetchPuzzles();
   }, []);
-  
-  const handleLogout = async () => {
-    try {
-      await logout();
-      // The auth layout will automatically redirect to login screen
-    } catch (error) {
-      Alert.alert('Logout Error', error.message || 'Failed to logout');
-    }
-  };
   
   return (
     <View style={styles.container}>
@@ -69,30 +60,6 @@ const HomeScreen = () => {
           <Text style={styles.buttonText}>Browse Puzzles</Text>
         </TouchableOpacity>
       </View>
-      
-      <TouchableOpacity 
-        style={styles.logoutButton}
-        onPress={() => {
-          Alert.alert(
-            'Logout',
-            'Are you sure you want to logout?',
-            [
-              {
-                text: 'Cancel',
-                style: 'cancel',
-              },
-              {
-                text: 'Logout',
-                onPress: handleLogout,
-                style: 'destructive',
-              },
-            ]
-          );
-        }}
-      >
-        <Ionicons name="log-out-outline" size={24} color={theme.COLORS.white} />
-        <Text style={styles.logoutButtonText}>Logout</Text>
-      </TouchableOpacity>
     </View>
   );
 };
@@ -138,22 +105,7 @@ const styles = StyleSheet.create({
     color: theme.COLORS.white,
     fontSize: 16,
     fontWeight: 'bold',
-  },
-  logoutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.COLORS.error,
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 20,
-  },
-  logoutButtonText: {
-    color: theme.COLORS.white,
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginLeft: 8,
-  },
+  }
 });
 
 export default HomeScreen; 

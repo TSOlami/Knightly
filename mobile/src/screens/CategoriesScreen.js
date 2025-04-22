@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TextInput } from 'react-native';
 import { useRouter } from 'expo-router';
 import CategoryCard from '../components/CategoryCard';
 import theme from '../theme';
 import TabBarIcon from '../components/TabBarIcon';
 import puzzleService from '../services/puzzleService';
+import { CategoryCardSkeleton } from '../components/Skeleton';
 
 const CategoriesScreen = () => {
   const router = useRouter();
@@ -104,6 +105,13 @@ const CategoriesScreen = () => {
     });
   };
 
+  // Render skeleton loading placeholders
+  const renderSkeletonLoading = () => {
+    return Array(6).fill(0).map((_, index) => (
+      <CategoryCardSkeleton key={`skeleton-${index}`} />
+    ));
+  };
+
   return (
     <View style={styles.container}>
       {/* Search input */}
@@ -139,9 +147,8 @@ const CategoriesScreen = () => {
         <Text style={styles.sectionTitle}>All Categories</Text>
         
         {loading ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={theme.COLORS.primary} />
-            <Text style={styles.loadingText}>Loading categories...</Text>
+          <View>
+            {renderSkeletonLoading()}
           </View>
         ) : error ? (
           <View style={styles.errorContainer}>
@@ -204,15 +211,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: theme.COLORS.text.primary,
     marginBottom: theme.SPACING.md,
-  },
-  loadingContainer: {
-    padding: theme.SPACING.xl,
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: theme.SPACING.md,
-    fontSize: theme.TYPOGRAPHY.fontSize.md,
-    color: theme.COLORS.text.secondary,
   },
   errorContainer: {
     padding: theme.SPACING.xl,

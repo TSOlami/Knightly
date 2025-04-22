@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Alert, Switch, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Alert, ScrollView, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import theme from '../theme';
@@ -10,9 +10,6 @@ import { useAuth } from '../context/AuthContext';
 const ProfileScreen = () => {
   const router = useRouter();
   const { user, logout, updatePreferences, loading } = useAuth();
-  const [isSoundEnabled, setIsSoundEnabled] = useState(
-    user?.preferences?.sound ?? true
-  );
   const [isHapticEnabled, setIsHapticEnabled] = useState(
     user?.preferences?.hapticFeedback ?? true
   );
@@ -32,7 +29,6 @@ const ProfileScreen = () => {
     try {
       await updatePreferences({
         theme: selectedTheme,
-        sound: isSoundEnabled,
         hapticFeedback: isHapticEnabled,
       });
       Alert.alert('Success', 'Preferences saved successfully');
@@ -45,6 +41,10 @@ const ProfileScreen = () => {
     if (user?.isGuest) {
       router.push('/settings/convert-account');
     }
+  };
+
+  const goToSettings = () => {
+    router.push('/settings');
   };
 
   if (!user) {
@@ -90,80 +90,6 @@ const ProfileScreen = () => {
         </View>
       </View>
       
-      <Card title="Settings" style={styles.settingsCard}>
-        <View style={styles.settingItem}>
-          <Text style={styles.settingLabel}>Sound Effects</Text>
-          <Switch
-            value={isSoundEnabled}
-            onValueChange={setIsSoundEnabled}
-            trackColor={{ false: theme.COLORS.greyLight, true: theme.COLORS.primary }}
-            thumbColor={theme.COLORS.white}
-          />
-        </View>
-        
-        <View style={styles.settingItem}>
-          <Text style={styles.settingLabel}>Haptic Feedback</Text>
-          <Switch
-            value={isHapticEnabled}
-            onValueChange={setIsHapticEnabled}
-            trackColor={{ false: theme.COLORS.greyLight, true: theme.COLORS.primary }}
-            thumbColor={theme.COLORS.white}
-          />
-        </View>
-        
-        <View style={styles.themeSelector}>
-          <Text style={styles.settingLabel}>App Theme</Text>
-          <View style={styles.themeOptions}>
-            <Button
-              title="Light"
-              style={[
-                styles.themeButton,
-                selectedTheme === 'light' && styles.selectedThemeButton,
-              ]}
-              textStyle={[
-                styles.themeButtonText,
-                selectedTheme === 'light' && styles.selectedThemeButtonText,
-              ]}
-              onPress={() => setSelectedTheme('light')}
-              icon={<Ionicons name="sunny" size={16} color={selectedTheme === 'light' ? theme.COLORS.white : theme.COLORS.greyDark} />}
-            />
-            <Button
-              title="Dark"
-              style={[
-                styles.themeButton,
-                selectedTheme === 'dark' && styles.selectedThemeButton,
-              ]}
-              textStyle={[
-                styles.themeButtonText,
-                selectedTheme === 'dark' && styles.selectedThemeButtonText,
-              ]}
-              onPress={() => setSelectedTheme('dark')}
-              icon={<Ionicons name="moon" size={16} color={selectedTheme === 'dark' ? theme.COLORS.white : theme.COLORS.greyDark} />}
-            />
-            <Button
-              title="System"
-              style={[
-                styles.themeButton,
-                selectedTheme === 'system' && styles.selectedThemeButton,
-              ]}
-              textStyle={[
-                styles.themeButtonText,
-                selectedTheme === 'system' && styles.selectedThemeButtonText,
-              ]}
-              onPress={() => setSelectedTheme('system')}
-              icon={<Ionicons name="settings" size={16} color={selectedTheme === 'system' ? theme.COLORS.white : theme.COLORS.greyDark} />}
-            />
-          </View>
-        </View>
-        
-        <Button
-          title="Save Preferences"
-          onPress={savePreferences}
-          style={styles.saveButton}
-          disabled={loading}
-        />
-      </Card>
-      
       {user.isGuest && (
         <Card title="Convert Guest Account" style={styles.card}>
           <Text style={styles.cardText}>
@@ -176,6 +102,13 @@ const ProfileScreen = () => {
           />
         </Card>
       )}
+      
+      <Button
+        title="Go to Settings"
+        onPress={goToSettings}
+        style={styles.settingsButton}
+        icon={<Ionicons name="settings-outline" size={20} color={theme.COLORS.white} />}
+      />
       
       <Button
         title="Logout"
@@ -255,7 +188,7 @@ const styles = StyleSheet.create({
   statCard: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: 12,
+    padding: 10,
   },
   statValue: {
     fontSize: 24,
@@ -265,74 +198,35 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 12,
-    color: theme.COLORS.greyDark,
+    color: theme.COLORS.text.secondary,
+    textAlign: 'center',
   },
   card: {
-    marginHorizontal: 16,
-    marginBottom: 16,
-  },
-  settingsCard: {
-    marginHorizontal: 16,
-    marginBottom: 16,
+    margin: 16,
+    marginTop: 0,
   },
   cardText: {
     fontSize: 14,
-    color: theme.COLORS.text,
+    color: theme.COLORS.text.secondary,
     marginBottom: 16,
   },
-  settingItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.COLORS.greyLight,
-  },
-  settingLabel: {
-    fontSize: 16,
-    color: theme.COLORS.text,
-  },
-  themeSelector: {
-    paddingVertical: 12,
-  },
-  themeOptions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 12,
-  },
-  themeButton: {
-    flex: 1,
-    marginHorizontal: 4,
-    backgroundColor: theme.COLORS.white,
-    borderWidth: 1,
-    borderColor: theme.COLORS.greyLight,
-  },
-  selectedThemeButton: {
-    backgroundColor: theme.COLORS.primary,
-    borderColor: theme.COLORS.primary,
-  },
-  themeButtonText: {
-    color: theme.COLORS.greyDark,
-    fontSize: 12,
-  },
-  selectedThemeButtonText: {
-    color: theme.COLORS.white,
-  },
-  saveButton: {
-    marginTop: 16,
-  },
   createAccountButton: {
-    marginTop: 8,
+    backgroundColor: theme.COLORS.secondary,
+  },
+  settingsButton: {
+    margin: 16,
+    marginBottom: 8,
+    backgroundColor: theme.COLORS.secondary,
   },
   logoutButton: {
     margin: 16,
     marginTop: 8,
-    backgroundColor: theme.COLORS.white,
+    backgroundColor: theme.COLORS.background,
     borderWidth: 1,
-    borderColor: theme.COLORS.error,
+    borderColor: theme.COLORS.danger,
   },
   logoutButtonText: {
-    color: theme.COLORS.error,
+    color: theme.COLORS.danger,
   },
 });
 

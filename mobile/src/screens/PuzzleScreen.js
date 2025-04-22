@@ -37,6 +37,8 @@ const PuzzleScreen = ({ puzzleName: propPuzzleName, puzzleId: propPuzzleId }) =>
   const [showSolution, setShowSolution] = useState(false);
   const [moveHistory, setMoveHistory] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [startTime, setStartTime] = useState(Date.now());
+  const [isLoading, setIsLoading] = useState(false);
   
   // Fetch puzzle from API
   useEffect(() => {
@@ -65,17 +67,58 @@ const PuzzleScreen = ({ puzzleName: propPuzzleName, puzzleId: propPuzzleId }) =>
     fetchPuzzle();
   }, [puzzleId, router]);
   
+  // Handle loading next puzzle
+  const loadNextPuzzle = async () => {
+    try {
+      setIsLoading(true);
+      const nextPuzzleData = await puzzleService.getNextPuzzle(puzzleId);
+      
+      if (nextPuzzleData) {
+        const formattedPuzzle = puzzleService.formatPuzzle(nextPuzzleData);
+        
+        // Reset state for new puzzle
+        setIsSolved(false);
+        setShowSolution(false);
+        setMoveHistory([]);
+        setPuzzle(formattedPuzzle);
+        setStartTime(Date.now());
+        
+        // Update the URL params
+        router.replace({
+          pathname: '/(modals)/puzzle',
+          params: {
+            puzzleName: formattedPuzzle.name,
+            puzzleId: formattedPuzzle.id,
+          }
+        });
+      } else {
+        // No more puzzles or error
+        Alert.alert(
+          'No More Puzzles',
+          'You have completed all available puzzles in this set!',
+          [{ text: 'OK', onPress: () => router.back() }]
+        );
+      }
+    } catch (error) {
+      console.error('Failed to load next puzzle:', error);
+      Alert.alert('Error', 'Failed to load next puzzle. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
   // Handle puzzle solved
   const handleSolve = async (moves) => {
     setIsSolved(true);
     setMoveHistory(moves);
     
-    // Save progress to the server
     try {
-      const timeToSolve = 0; // In a real app, you would calculate this
+      const timeToSolve = Date.now() - startTime;
       await puzzleService.markAsSolved(puzzleId, moves.length, timeToSolve);
+      await loadNextPuzzle();
     } catch (error) {
-      console.error('Failed to save puzzle progress:', error);
+      console.error('Error handling puzzle completion:', error);
+      Alert.alert('Error', 'Failed to save progress. Please try again.');
     }
   };
   
@@ -114,17 +157,6 @@ const PuzzleScreen = ({ puzzleName: propPuzzleName, puzzleId: propPuzzleId }) =>
                 : `${puzzle.solution.length} moves`}
             </Text>
           </View>
-          
-          <View style={styles.metaItem}>
-            <TabBarIcon 
-              name={puzzle.fen.includes(' w ') ? 'circle' : 'circle-fill'} 
-              color={theme.COLORS.text.secondary} 
-              size={16} 
-            />
-            <Text style={styles.metaText}>
-              {puzzle.fen.includes(' w ') ? 'White' : 'Black'} to move
-            </Text>
-          </View>
         </View>
       </Card>
       
@@ -152,34 +184,8 @@ const PuzzleScreen = ({ puzzleName: propPuzzleName, puzzleId: propPuzzleId }) =>
           title="Next Puzzle"
           variant="primary"
           size="medium"
-          onPress={async () => {
-            try {
-              // Get a random puzzle from the same category
-              const nextPuzzleId = 'cm1-003'; // Would normally get next puzzle from API or store
-              setLoading(true);
-              
-              // Fetch the next puzzle data asynchronously
-              const nextPuzzleData = await puzzleService.getPuzzleById(nextPuzzleId);
-              const formattedPuzzle = puzzleService.formatPuzzle(nextPuzzleData);
-              
-              // Reset state and load next puzzle
-              setIsSolved(false);
-              setShowSolution(false);
-              setMoveHistory([]);
-              setPuzzle(formattedPuzzle);
-              
-              // Update the URL params
-              router.setParams({
-                puzzleId: formattedPuzzle.id,
-                puzzleName: formattedPuzzle.name
-              });
-            } catch (error) {
-              console.error('Failed to load next puzzle:', error);
-              Alert.alert('Error', 'Failed to load next puzzle. Please try again.');
-            } finally {
-              setLoading(false);
-            }
-          }}
+          onPress={loadNextPuzzle}
+          disabled={isLoading}
           style={styles.actionButton}
         />
       </View>
